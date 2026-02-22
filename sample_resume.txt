@@ -1,0 +1,57 @@
+Rahul Sharma
+rahul.sharma@example.com | +91-9876543210 | linkedin.com/in/rahulsharma | github.com/rahulsharma
+
+SUMMARY
+Passionate Full Stack Developer with 3+ years of experience building scalable web applications. Strong background in Python, React, and cloud technologies. Looking for challenging roles in fast-paced startups.
+
+EDUCATION
+B.Tech in Computer Science
+Indian Institute of Technology, Delhi
+2018 – 2022 | CGPA: 8.7/10
+
+EXPERIENCE
+Software Engineer
+Infosys Technologies, Bangalore
+June 2022 – Present
+
+  - Developed RESTful APIs using Python Flask and FastAPI serving 100K+ daily requests
+  - Built responsive React dashboards with real-time data visualization using D3.js
+  - Containerized microservices with Docker and deployed on AWS EC2 and ECS
+  - Reduced API response times by 40% through Redis caching and query optimization
+  - Collaborated in Agile/Scrum sprints, conducted code reviews, and mentored 2 junior devs
+
+Software Development Intern
+Razorpay, Bangalore
+Jan 2022 – May 2022
+
+  - Worked on payment gateway integrations using Node.js and PostgreSQL
+  - Fixed 20+ bugs in the Django admin dashboard and improved test coverage to 85%
+
+SKILLS
+Programming: Python, JavaScript, TypeScript, Java, C++, Bash
+Web: React, Next.js, Node.js, Express, Django, Flask, FastAPI, REST API, GraphQL
+Database: PostgreSQL, MySQL, MongoDB, Redis, Elasticsearch
+Cloud & DevOps: AWS, Docker, Kubernetes, GitHub Actions, CI/CD, Terraform
+ML/AI: Machine Learning, Scikit-learn, Pandas, NumPy, TensorFlow
+Tools: Git, GitHub, Postman, Jira, Linux
+
+PROJECTS
+Smart Resume Analyzer
+Built an NLP-based resume parser using spaCy and Python that extracts skills, education, and experience. Deployed on AWS Lambda with a React frontend. Used BERT embeddings for job-resume matching.
+Technologies: Python, spaCy, React, AWS Lambda, DynamoDB
+
+E-Commerce Platform
+Full stack e-commerce app with payment integration, inventory management, and real-time order tracking.
+Technologies: Next.js, Node.js, PostgreSQL, Redis, Stripe API, Docker
+
+CERTIFICATIONS
+AWS Certified Developer – Associate (2023)
+Google Cloud Professional Data Engineer (2022)
+
+ACHIEVEMENTS
+Winner – Smart India Hackathon 2022 (National Level)
+Google Summer of Code 2021 Contributor
+Dean's Merit List – IIT Delhi 2019, 2020, 2021
+
+LANGUAGES
+English (Fluent), Hindi (Native), German (Basic)
