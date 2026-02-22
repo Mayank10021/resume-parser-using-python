@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResumeAI Parser</title>
+<style>
+  :root{
+    --primary:#6c63ff;--primary-dark:#5a52e0;--bg:#0f0f1a;--card:#1a1a2e;
+    --card2:#16213e;--text:#e0e0ff;--muted:#9090b0;--green:#00e676;
+    --yellow:#ffd740;--red:#ff5252;--border:#2a2a4a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',sans-serif;min-height:100vh}
+  header{background:linear-gradient(135deg,#1a1a2e,#16213e);border-bottom:1px solid var(--border);
+    padding:1.2rem 2rem;display:flex;align-items:center;gap:1rem}
+  header h1{font-size:1.6rem;background:linear-gradient(90deg,var(--primary),#a78bfa);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700}
+  header p{color:var(--muted);font-size:.85rem;margin-top:.1rem}
+  .badge{background:var(--primary);color:#fff;font-size:.65rem;padding:.2rem .5rem;
+    border-radius:20px;font-weight:600;-webkit-text-fill-color:#fff}
+  main{max-width:1300px;margin:0 auto;padding:2rem}
+  .grid{display:grid;grid-template-columns:420px 1fr;gap:2rem}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+
+  /* Upload card */
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem}
+  .card h2{font-size:1rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1rem}
+
+  .drop-zone{border:2px dashed var(--border);border-radius:12px;padding:2.5rem 1rem;
+    text-align:center;cursor:pointer;transition:.2s;position:relative}
+  .drop-zone:hover,.drop-zone.dragover{border-color:var(--primary);background:rgba(108,99,255,.07)}
+  .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+  .drop-zone .icon{font-size:3rem;margin-bottom:.5rem}
+  .drop-zone p{color:var(--muted);font-size:.9rem}
+  .drop-zone strong{color:var(--primary)}
+
+  .file-info{background:var(--card2);border-radius:8px;padding:.8rem 1rem;margin-top:1rem;
+    display:none;align-items:center;gap:.8rem;font-size:.85rem}
+  .file-info .fname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  textarea{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;
+    color:var(--text);padding:.8rem;font-size:.85rem;resize:vertical;height:130px;
+    margin-top:1rem;font-family:monospace}
+  textarea:focus{outline:none;border-color:var(--primary)}
+
+  .tabs{display:flex;gap:.5rem;margin-bottom:1rem}
+  .tab{flex:1;padding:.5rem;border:1px solid var(--border);border-radius:8px;background:transparent;
+    color:var(--muted);cursor:pointer;font-size:.85rem;transition:.2s}
+  .tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  .btn{width:100%;padding:.85rem;background:var(--primary);color:#fff;border:none;
+    border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;margin-top:1rem;transition:.2s}
+  .btn:hover{background:var(--primary-dark)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  /* Results */
+  #results{display:none}
+  .score-ring{text-align:center;padding:1rem}
+  .ring{position:relative;width:120px;height:120px;margin:0 auto 1rem}
+  .ring svg{transform:rotate(-90deg)}
+  .ring-track{fill:none;stroke:var(--border);stroke-width:8}
+  .ring-fill{fill:none;stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s ease}
+  .ring-text{position:absolute;inset:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center}
+  .ring-text .score-num{font-size:1.8rem;font-weight:700;color:var(--primary)}
+  .ring-text .score-label{font-size:.65rem;color:var(--muted)}
+
+  .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-top:1rem}
+  .info-item{background:var(--card2);border-radius:8px;padding:.7rem}
+  .info-item .label{font-size:.65rem;color:var(--muted);text-transform:uppercase;margin-bottom:.2rem}
+  .info-item .value{font-size:.9rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+  .section-title{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;
+    margin:1.2rem 0 .6rem;display:flex;align-items:center;gap:.5rem}
+  .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  .skills-grid{display:flex;flex-wrap:wrap;gap:.4rem}
+  .skill-tag{padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:600;
+    background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);color:#a78bfa}
+
+  .exp-card,.edu-card,.proj-card{background:var(--card2);border-radius:10px;
+    padding:.9rem 1rem;margin-bottom:.6rem;border-left:3px solid var(--primary)}
+  .exp-title{font-weight:700;font-size:.95rem}
+  .exp-sub{color:var(--muted);font-size:.8rem;margin-top:.2rem}
+  .exp-dates{color:var(--primary);font-size:.75rem;margin-top:.2rem}
+  .exp-desc{color:var(--muted);font-size:.8rem;margin-top:.5rem;line-height:1.5}
+
+  .tabs-result{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+  .rtab{padding:.4rem .9rem;border-radius:20px;border:1px solid var(--border);
+    background:transparent;color:var(--muted);cursor:pointer;font-size:.8rem;transition:.2s}
+  .rtab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  .rpane{display:none}
+  .rpane.active{display:block}
+
+  .json-view{background:var(--card2);border-radius:10px;padding:1rem;
+    overflow:auto;max-height:500px;font-family:monospace;font-size:.78rem;line-height:1.6}
+  .json-view .key{color:#a78bfa}
+  .json-view .str{color:#69f0ae}
+  .json-view .num{color:#ffd740}
+  .json-view .bool{color:#ff7043}
+
+  .dl-btn{background:var(--card2);border:1px solid var(--border);color:var(--text);
+    padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-size:.82rem;transition:.2s}
+  .dl-btn:hover{border-color:var(--primary);color:var(--primary)}
+
+  .loading{display:none;text-align:center;padding:3rem;color:var(--muted)}
+  .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);
+    border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 1rem}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .alert{padding:.8rem 1rem;border-radius:8px;margin-top:.8rem;font-size:.85rem;display:none}
+  .alert.error{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.3);color:var(--red)}
+
+  .cat-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;
+    margin-top:.7rem;margin-bottom:.3rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚡ ResumeAI Parser <span class="badge">HACKATHON</span></h1>
+    <p>Extract structured data from resumes instantly — PDF · DOCX · TXT</p>
+  </div>
+</header>
+
+<main>
+<div class="grid">
+
+  <!-- LEFT PANEL -->
+  <div>
+    <div class="card">
+      <h2>Upload Resume</h2>
+      <div class="tabs">
+        <button class="tab active" onclick="switchInput('file')">📄 File Upload</button>
+        <button class="tab" onclick="switchInput('text')">✏️ Paste Text</button>
+      </div>
+
+      <div id="file-input-area">
+        <div class="drop-zone" id="dropZone">
+          <input type="file" id="fileInput" accept=".pdf,.docx,.txt" onchange="onFileSelect(this)"/>
+          <div class="icon">📋</div>
+          <p><strong>Click to upload</strong> or drag & drop</p>
+          <p style="margin-top:.3rem;font-size:.75rem">PDF, DOCX, TXT — up to 16 MB</p>
+        </div>
+        <div class="file-info" id="fileInfo">
+          <span style="font-size:1.4rem">📄</span>
+          <span class="fname" id="fileName"></span>
+          <span id="fileSize" style="color:var(--muted);white-space:nowrap"></span>
+        </div>
+      </div>
+
+      <div id="text-input-area" style="display:none">
+        <textarea id="textInput" placeholder="Paste resume text here…"></textarea>
+      </div>
+
+      <div class="alert error" id="errorBox"></div>
+      <button class="btn" id="parseBtn" onclick="parseResume()">🚀 Parse Resume</button>
+    </div>
+
+    <!-- Score Card (shown after parse) -->
+    <div class="card" id="scoreCard" style="display:none;margin-top:1.5rem">
+      <h2>Resume Score</h2>
+      <div class="score-ring">
+        <div class="ring">
+          <svg width="120" height="120" viewBox="0 0 120 120">
+            <circle class="ring-track" cx="60" cy="60" r="50"/>
+            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="50"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="ring-text">
+            <span class="score-num" id="scoreNum">0</span>
+            <span class="score-label">/ 100</span>
+          </div>
+        </div>
+        <p id="scoreMsg" style="color:var(--muted);font-size:.85rem"></p>
+      </div>
+
+      <div class="section-title">Contact</div>
+      <div class="info-grid" id="contactGrid"></div>
+
+      <div class="section-title">Quick Stats</div>
+      <div class="info-grid" id="statsGrid"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div id="results">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+        <h2 style="margin:0">Parsed Results</h2>
+        <button class="dl-btn" onclick="downloadJSON()">⬇ Download JSON</button>
+      </div>
+
+      <div class="tabs-result">
+        <button class="rtab active" onclick="showTab('skills')">🛠 Skills</button>
+        <button class="rtab" onclick="showTab('experience')">💼 Experience</button>
+        <button class="rtab" onclick="showTab('education')">🎓 Education</button>
+        <button class="rtab" onclick="showTab('projects')">🚀 Projects</button>
+        <button class="rtab" onclick="showTab('raw')">{ } JSON</button>
+      </div>
+
+      <div id="pane-skills" class="rpane active"></div>
+      <div id="pane-experience" class="rpane"></div>
+      <div id="pane-education" class="rpane"></div>
+      <div id="pane-projects" class="rpane"></div>
+      <div id="pane-raw" class="rpane"><div class="json-view" id="jsonView"></div></div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading" style="display:none;grid-column:1/-1">
+    <div class="spinner"></div>
+    <p>Parsing resume…</p>
+  </div>
+</div>
+</main>
+
+<script>
+let currentMode = 'file';
+let parsedData = null;
+
+function switchInput(mode){
+  currentMode = mode;
+  document.getElementById('file-input-area').style.display = mode==='file'?'block':'none';
+  document.getElementById('text-input-area').style.display = mode==='text'?'block':'none';
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    t.classList.toggle('active', (i===0&&mode==='file')||(i===1&&mode==='text'));
+  });
+}
+
+function onFileSelect(input){
+  const f = input.files[0];
+  if(!f) return;
+  document.getElementById('fileName').textContent = f.name;
+  document.getElementById('fileSize').textContent = (f.size/1024).toFixed(1)+' KB';
+  document.getElementById('fileInfo').style.display = 'flex';
+}
+
+// Drag & drop
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover')});
+dz.addEventListener('dragleave',()=>dz.classList.remove('dragover'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault(); dz.classList.remove('dragover');
+  const f=e.dataTransfer.files[0];
+  if(f){document.getElementById('fileInput').files=e.dataTransfer.files;onFileSelect(document.getElementById('fileInput'));}
+});
+
+function showError(msg){
+  const el=document.getElementById('errorBox');
+  el.textContent=msg; el.style.display='block';
+  setTimeout(()=>el.style.display='none',5000);
+}
+
+async function parseResume(){
+  const btn=document.getElementById('parseBtn');
+  btn.disabled=true;
+  document.getElementById('loading').style.display='block';
+  document.getElementById('results').style.display='none';
+  document.getElementById('scoreCard').style.display='none';
+
+  try{
+    let response;
+    if(currentMode==='file'){
+      const f=document.getElementById('fileInput').files[0];
+      if(!f){showError('Please select a file');btn.disabled=false;document.getElementById('loading').style.display='none';return;}
+      const fd=new FormData(); fd.append('resume',f);
+      response=await fetch('/parse',{method:'POST',body:fd});
+    } else {
+      const text=document.getElementById('textInput').value.trim();
+      if(!text){showError('Please paste resume text');btn.disabled=false;document.getElementById('loading').style.display='none';return;}
+      response=await fetch('/parse_text',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    }
+    const data=await response.json();
+    if(data.error){showError(data.error);return;}
+    parsedData=data;
+    renderResults(data);
+  } catch(e){
+    showError('Parse failed: '+e.message);
+  } finally {
+    btn.disabled=false;
+    document.getElementById('loading').style.display='none';
+  }
+}
+
+function renderResults(d){
+  document.getElementById('results').style.display='block';
+  document.getElementById('scoreCard').style.display='block';
+
+  // Score ring
+  const score=d.score||0;
+  const circumference=314;
+  const offset=circumference-(score/100*circumference);
+  const fill=document.getElementById('ringFill');
+  fill.style.stroke=score>=70?'#00e676':score>=40?'#ffd740':'#ff5252';
+  setTimeout(()=>fill.style.strokeDashoffset=offset,50);
+  document.getElementById('scoreNum').textContent=score;
+  document.getElementById('scoreMsg').textContent=
+    score>=80?'🌟 Excellent resume!'
+    :score>=60?'✅ Good — a few improvements possible'
+    :score>=40?'⚠️ Fair — needs more content'
+    :'❗ Needs significant improvement';
+
+  // Contact
+  const c=d.contact||{};
+  const cg=document.getElementById('contactGrid');
+  cg.innerHTML=infoItem('Name',c.name||'—')+infoItem('Email',c.email||'—')
+    +infoItem('Phone',c.phone||'—')+infoItem('LinkedIn',c.linkedin?'Linked':'—');
+
+  // Stats
+  const sg=document.getElementById('statsGrid');
+  sg.innerHTML=infoItem('Skills',d.skill_count||0)
+    +infoItem('Experience',d.experience?.length||0+' roles')
+    +infoItem('Education',d.education?.length||0+' entries')
+    +infoItem('Words',d.meta?.word_count||0);
+
+  // Skills pane
+  const skills=d.skills||{};
+  let sh='';
+  for(const [cat,list] of Object.entries(skills)){
+    if(!list.length) continue;
+    sh+=`<div class="cat-label">${cat.replace('_',' ')}</div><div class="skills-grid">`;
+    list.forEach(s=>sh+=`<span class="skill-tag">${s}</span>`);
+    sh+='</div>';
+  }
+  document.getElementById('pane-skills').innerHTML=sh||'<p style="color:var(--muted);padding:1rem">No skills detected.</p>';
+
+  // Experience
+  const exp=d.experience||[];
+  document.getElementById('pane-experience').innerHTML=exp.length
+    ? exp.map(e=>`<div class="exp-card">
+        <div class="exp-title">${e.title||'Role'}</div>
+        <div class="exp-sub">${e.company||''}</div>
+        <div class="exp-dates">${(e.dates||[]).join(' – ')}</div>
+        <div class="exp-desc">${e.description||''}</div>
+      </div>`).join('')
+    : '<p style="color:var(--muted);padding:1rem">No experience entries found.</p>';
+
+  // Education
+  const edu=d.education||[];
+  document.getElementById('pane-education').innerHTML=edu.length
+    ? edu.map(e=>`<div class="edu-card">
+        <div class="exp-title">${e.degree||'Degree'}</div>
+        <div class="exp-sub">${e.institution||''}</div>
+        <div class="exp-dates">${(e.dates||[]).join(' – ')}</div>
+      </div>`).join('')
+    : '<p style="color:var(--muted);padding:1rem">No education entries found.</p>';
+
+  // Projects
+  const proj=d.projects||[];
+  document.getElementById('pane-projects').innerHTML=proj.length
+    ? proj.map(p=>`<div class="proj-card">
+        <div class="exp-title">${p.name||'Project'}</div>
+        <div class="exp-desc">${p.description||''}</div>
+        ${p.technologies?.length?`<div class="skills-grid" style="margin-top:.5rem">${p.technologies.map(t=>`<span class="skill-tag">${t}</span>`).join('')}</div>`:''}
+      </div>`).join('')
+    : '<p style="color:var(--muted);padding:1rem">No projects found.</p>';
+
+  // JSON
+  document.getElementById('jsonView').innerHTML=syntaxHighlight(JSON.stringify(d,null,2));
+}
+
+function infoItem(label,value){
+  return `<div class="info-item"><div class="label">${label}</div><div class="value">${value}</div></div>`;
+}
+
+function showTab(name){
+  document.querySelectorAll('.rpane').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.rtab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('pane-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function syntaxHighlight(json){
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+    match=>{
+      let cls='num';
+      if(/^"/.test(match)){cls=/:$/.test(match)?'key':'str'}
+      else if(/true|false/.test(match)){cls='bool'}
+      return `<span class="${cls}">${match}</span>`;
+    });
+}
+
+function downloadJSON(){
+  if(!parsedData) return;
+  const blob=new Blob([JSON.stringify(parsedData,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='parsed_resume.json';
+  a.click();
+}
+</script>
+</body>
+</html>
